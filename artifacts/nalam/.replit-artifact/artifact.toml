@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Nalam"
+description = "A mobile-first daily check-in app for elderly parents and their families, with Tamil and English labels, elder and family views, medicine confirmations, urgent help requests, and a shared check-in history."
+version = "1.0.0"
+id = "artifacts/nalam"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20578
+
+[services.development]
+run = "pnpm --filter @workspace/nalam run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nalam", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/nalam/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20578"
+BASE_PATH = "/"

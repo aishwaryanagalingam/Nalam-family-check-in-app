@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: nalam
+    description: Family check-in operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /nalam/dashboard:
+    get:
+      operationId: getNalamDashboard
+      tags: [nalam]
+      summary: Get today's status and five days of check-in history
+      responses:
+        "200":
+          description: Dashboard state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NalamDashboard"
+  /nalam/checkins:
+    post:
+      operationId: createNalamCheckin
+      tags: [nalam]
+      summary: Record an elder check-in, medicine confirmation, or help request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NalamCheckinInput"
+      responses:
+        "201":
+          description: Check-in recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NalamCheckin"
+        "400":
+          description: Invalid check-in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +71,35 @@ components:
           type: string
       required:
         - status
+    NalamCheckin:
+      type: object
+      required: [id, kind, createdAt, sample]
+      properties:
+        id: { type: integer }
+        kind: { type: string, enum: [fine, medicine, help] }
+        createdAt: { type: string, format: date-time }
+        sample: { type: boolean }
+    NalamCheckinInput:
+      type: object
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [fine, medicine, help] }
+    NalamDashboard:
+      type: object
+      required: [elderName, expectedTime, status, lastCheckIn, lastMedicine, helpRequest, timeline]
+      properties:
+        elderName: { type: string }
+        expectedTime: { type: string }
+        status: { type: string, enum: [checked_in, waiting, overdue, help_requested] }
+        lastCheckIn: { oneOf: [{ $ref: "#/components/schemas/NalamCheckin" }, { type: "null" }] }
+        lastMedicine: { oneOf: [{ $ref: "#/components/schemas/NalamCheckin" }, { type: "null" }] }
+        helpRequest: { type: boolean }
+        timeline:
+          type: array
+          items: { $ref: "#/components/schemas/NalamCheckin" }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
 
